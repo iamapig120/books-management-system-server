@@ -51,7 +51,7 @@ interface DataBaseTool {
   }
   /**
    * Delete方法，删除行
-   *  @param params 一个对象，key为列名，value为值
+   * @param params 一个对象，key为列名，value为值
    * @returns Promise对象，resolve时传入delete结果
    */
   delete(params: { [x: string]: string | null | number }): Promise<any>
