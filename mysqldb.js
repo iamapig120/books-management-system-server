@@ -20,13 +20,20 @@ const pool = mysql.createPool({
   database: 'library',
   charset: 'utf8',
   waitForConnections: true,
-  connectionLimit: 63,
+  connectionLimit: 0xff,
   queueLimit: 0
 })
 
+/**
+ * Library数据库对象
+ * @type {{[x: string]: DataBaseTool}}
+ */
 const db = new Proxy(
   {},
   {
+    /**
+     * @returns {DataBaseTool}
+     */
     get: (obj, prop0) => {
       if (!obj[prop0]) {
         obj[prop0] = {
@@ -89,6 +96,7 @@ const db = new Proxy(
               }
             }
           ),
+          select: (...p) => obj[prop0].get(...p),
           /**
            * @param {Array[String|number|null]} params 所有新行的参数，按照表顺序传入
            */
@@ -228,7 +236,7 @@ const db = new Proxy(
   }
 )
 
-const res1 = db.users.get({
+const res1 = db.users.select({
   id: 4,
   name: 'handle'
 })
@@ -248,4 +256,7 @@ const res3 = db.users.get({
       JSON.stringify(await res3)
   )
 })()
-db.users.update({ name: 'handle3', password: 'pass5' }, { id: 7 })
+db.users.delete().confirm()
+// db.users.update({ name: 'handle3', password: 'pass5' }, { id: 7 })
+
+//module.exports = db
