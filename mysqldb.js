@@ -1,12 +1,17 @@
-// 引入 mysql2 库
+// 引入 mysql 库
 const mysql = require('mysql')
-// const connection = mysql.createConnection({
-//   host: 'localhost',
-//   user: 'root',
-//   password: 'root',
-//   database: 'library'
-//   charset:'utf8',
-// })
+if (!Array.prototype.flat) {
+  Array.prototype.flat = function(depth = 1) {
+    if (!Array.isArray(this)) return this
+    return this.reduce((accumulator, currentValue, currentIndex, array) => {
+      return accumulator.concat(
+        depth > 1
+          ? Array.prototype.flat.call(currentValue, depth - 1)
+          : currentValue
+      )
+    }, [])
+  }
+}
 // 建立一个连接池
 const pool = mysql.createPool({
   host: 'localhost',
@@ -24,77 +29,223 @@ const db = new Proxy(
   {
     get: (obj, prop0) => {
       if (!obj[prop0]) {
-        obj[prop0] = new Proxy(
-          {
-            remove: id => {
-              return new Promise((resolve, reject) => {
-                pool.query('DELETE FROM ?? WHERE id = ?', [prop0, id]),
-                  (err, results, fields) => {
-                    if (err) {
-                      //reject(err)
-                      throw err
-                      return
-                    }
-                    resolve(results)
-                    //console.log('Deled: ' + results.changedRows + ' Rows')
+        obj[prop0] = {
+          /**
+           * Get方法，参数为两个对象，key为列名，value为值，第二个参数可选
+           * @param {Object} params 一个对象，key为列名，value为值
+           * @param {Object} orderBy 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
+           */
+          get: (params = {}, orderBy = {}) => {
+            const paramsLength = Object.keys(params).length
+            const orderKeys = Object.keys(orderBy)
+            const orderByLength = orderKeys.length
+            if (!obj[prop0]._getString[paramsLength][orderByLength]) {
+              obj[prop0]._getString[paramsLength][orderByLength] = (() => {
+                let returnString = 'SELECT * FROM ??'
+                if (paramsLength > 0) {
+                  returnString += ' WHERE'
+                  for (let i = 0; i < paramsLength - 1; i++) {
+                    returnString += ' ??=? AND'
                   }
+                  returnString += ' ??=?'
+                }
+                if (orderByLength > 0) {
+                  returnString += ' ORDER BY'
+                  for (let i = 0; i < orderByLength - 1; i++) {
+                    returnString += ' ?'
+                    returnString += orderKeys[i] ? ' ASC,' : ' DESC,'
+                  }
+                  returnString += ' ?'
+                  returnString += orderKeys[i] ? ' ASC' : ' DESC'
+                }
+                return returnString
+              })()
+            }
+            return new Promise((resolve, reject) => {
+              pool.query(
+                obj[prop0]._getString[paramsLength][orderByLength],
+                [
+                  prop0,
+                  ...(() => Object.entries(params).flat())(),
+                  ...orderKeys
+                ],
+                (err, result, fields) => {
+                  if (err) {
+                    reject(err)
+                  }
+                  resolve(result)
+                }
+              )
+            })
+          },
+          _getString: new Proxy(
+            {},
+            {
+              get: (obj, prop0) => {
+                if (!obj[prop0]) {
+                  obj[prop0] = {}
+                }
+                return obj[prop0]
+              }
+            }
+          ),
+          /**
+           * @param {Array[String|number|null]} params 所有新行的参数，按照表顺序传入
+           */
+          insert: (...params) => {
+            const paramsLength = params.length
+            if (!obj[prop0]._insertString[paramsLength]) {
+              obj[prop0]._insertString[paramsLength] = (() => {
+                let returnString = 'INSERT INTO ?? VALUES ('
+                for (let i = 0; i < paramsLength - 1; i++) {
+                  returnString += '?,'
+                }
+                returnString += ' ?)'
+                return returnString
+              })()
+            }
+            return new Promise((resolve, reject) => {
+              pool.query(
+                obj[prop0]._insertString[paramsLength],
+                [prop0, ...params],
+                (err, result, fields) => {
+                  if (err) {
+                    reject(err)
+                  }
+                  resolve(result)
+                }
+              )
+            })
+          },
+          _insertString: {},
+          /**
+           * @param {Object} params1 键值对1，用于表明要更新的内容
+           * @param {Object} params2 键值对2，用于查找对应的行
+           */
+          update: (params1, params2) => {
+            const params1Length = Object.keys(params1).length
+            const params2Length = Object.keys(params2).length
+            if (!obj[prop0]._updateString[params1Length][params2Length]) {
+              obj[prop0]._updateString[params1Length][params2Length] = (() => {
+                let returnString = 'UPDATE ?? SET'
+                for (let i = 0; i < params1Length - 1; i++) {
+                  returnString += ' ??=? ,'
+                }
+                returnString += ' ??=? WHERE'
+                for (let i = 0; i < params2Length - 1; i++) {
+                  returnString += ' ??=? AND'
+                }
+                returnString += ' ??=?'
+                return returnString
+              })()
+            }
+            return new Promise((resolve, reject) => {
+              pool.query(
+                obj[prop0]._updateString[params1Length][params2Length],
+                [
+                  prop0,
+                  ...(() => Object.entries(params1).flat())(),
+                  ...(() => Object.entries(params2).flat())()
+                ],
+                (err, result, fields) => {
+                  console.log(
+                    obj[prop0]._updateString[params1Length][params2Length]
+                  )
+                  console.log([
+                    prop0,
+                    ...(() => Object.entries(params1).flat())(),
+                    ...(() => Object.entries(params2).flat())()
+                  ])
+                  if (err) {
+                    reject(err)
+                  }
+                  resolve(result)
+                }
+              )
+            })
+          },
+          _updateString: new Proxy(
+            {},
+            {
+              get: (obj, prop0) => {
+                if (!obj[prop0]) {
+                  obj[prop0] = {}
+                }
+                return obj[prop0]
+              }
+            }
+          ),
+          /**
+           * Del方法，参数为一个对象，key为列名，value为值
+           * @param {Object} params 一个对象，key为列名，value为值
+           */
+          delete: (params = {}) => {
+            const paramsLength = Object.keys(params).length
+            if (!obj[prop0]._deleteString[paramsLength]) {
+              obj[prop0]._deleteString[paramsLength] = (() => {
+                let returnString = 'DELETE FROM ??'
+                if (paramsLength > 0) {
+                  returnString += ' WHERE'
+                  for (let i = 0; i < paramsLength - 1; i++) {
+                    returnString += ' ??=? AND'
+                  }
+                  returnString += ' ??=?'
+                }
+                return returnString
+              })()
+            }
+            const confirmFun = () =>
+              new Promise((resolve, reject) => {
+                pool.query(
+                  obj[prop0]._deleteString[paramsLength],
+                  [
+                    prop0,
+                    ...(() => Object.entries(params).flat())(),
+                    ...orderKeys
+                  ],
+                  (err, result, fields) => {
+                    if (err) {
+                      reject(err)
+                    }
+                    resolve(result)
+                  }
+                )
               })
+            if (paramsLength > 0) {
+              return confirmFun()
+            } else {
+              return { confirm: () => confirmFun() }
             }
           },
-          {
-            get: (obj, prop1) => {
-              if (!obj[prop1]) {
-                obj[prop1] = prop2 => {
-                  return new Promise((resolve, reject) =>
-                    pool.query(
-                      `SELECT * FROM ?? WHERE ?? = ?`,
-                      [prop0,prop1,prop2],
-                      (err, results) => {
-                        if (err) {
-                          reject(err)
-                          throw err
-                          return
-                        }
-                        resolve(results)
-                      }
-                    )
-                  )
-                }
-              }
-              return obj[prop1]
-            },
-            set: (obj, prop1, value) => {}
-          }
-        )
+          _deleteString: {}
+        }
       }
-      return obj[prop0]
+      return Object.freeze(obj[prop0])
     },
     set: (obj, prop, value) => {
       return false
     }
   }
 )
-db.users.name('handle').then(v => {
-  if (v.length > 0) {
-    console.log('Res:' + JSON.stringify(v))
-  } else {
-    console.warn('No Results.')
-  }
+
+const res1 = db.users.get({
+  id: 4,
+  name: 'handle'
 })
-db.users.password('pass2').then(v => {
-  if (v.length > 0) {
-    console.log('Res:' + JSON.stringify(v))
-  } else {
-    console.warn('No Results.')
-  }
+const res2 = db.users.get({
+  password: 'pass2'
 })
-db.users.password('pass3').then(v => {
-  if (v.length > 0) {
-    console.log('Res:' + JSON.stringify(v))
-  } else {
-    console.warn('No Results.')
-  }
+const res3 = db.users.get({
+  id: 7
 })
-// db.users.remove('3').then(v=>{
-//   console.log('Removed: ' + v.changedRows + ' rows')
-// })
+;(async () => {
+  console.log(
+    'Res: ' +
+      JSON.stringify(await res1) +
+      '\nRes: ' +
+      JSON.stringify(await res2) +
+      '\nRes: ' +
+      JSON.stringify(await res3)
+  )
+})()
+db.users.update({ name: 'handle3', password: 'pass5' }, { id: 7 })
