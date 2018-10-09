@@ -1,6 +1,6 @@
 /// <reference types="node" />
 
-import mysql = require("mysql");
+import mysql = require('mysql')
 interface DataBaseTool {
   /**
    * Get方法，用于查询数据库，返回一个Promise对象，参数为两个对象，key为列名，value为值，第二个参数可选
@@ -27,7 +27,7 @@ interface DataBaseTool {
    * @param params 所有新行的参数，按照表顺序传入
    * @returns Promise对象，resolve时传入insert结果
    */
-  insert(params: Array[string | number | null]): Promise<any>
+  insert(params: Array<string | number | null>): Promise<any>
   /**
    * Update，更新行，类似于Select的玩法
    * @param params1 键值对1，用于表明要更新的内容
@@ -56,8 +56,15 @@ interface DataBaseTool {
    */
   delete(params: { [x: string]: string | null | number }): Promise<any>
 }
-
-export function connect(p: string | mysql.PoolConfig): mysql.Pool
-export interface  DataBase { [x: string]: DataBaseTool }
+/**
+ * 连接数据库并创建一个连接池
+ */
+declare const connect: (p: string | mysql.PoolConfig) => void
+interface DataBase {
+  [x: string]: DataBaseTool
+}
+/**
+ * 整个数据库对象
+ */
 declare const database: DataBase
-export {database}
+export { database, connect }

@@ -229,8 +229,8 @@ const db = new Proxy(
     }
   }
 )
-
+const connect = p => {pool = mysql.createPool(p)}
 module.exports = {
-  connect: p => (pool = mysql.createPool(p)),
+  connect: connect,
   database: db
 }

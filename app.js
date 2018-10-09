@@ -1,4 +1,4 @@
-const DB = require('./mysqldb')
+const DB = require('./dbcon')
 const connect = DB.connect
 const db = DB.database
 connect({
