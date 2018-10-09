@@ -1,0 +1,18 @@
+# 不包含node模块目录
+/node_modules
+
+#  不包含自动生成的包管理文件
+package-lock.json
+
+# 不包含bat脚本
+*.bat
+
+# 不包含压缩文件
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
