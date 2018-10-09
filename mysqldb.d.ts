@@ -1,3 +1,6 @@
+/// <reference types="node" />
+
+import mysql = require("mysql");
 interface DataBaseTool {
   /**
    * Get方法，用于查询数据库，返回一个Promise对象，参数为两个对象，key为列名，value为值，第二个参数可选
@@ -53,3 +56,8 @@ interface DataBaseTool {
    */
   delete(params: { [x: string]: string | null | number }): Promise<any>
 }
+
+export function connect(p: string | mysql.PoolConfig): mysql.Pool
+export interface  DataBase { [x: string]: DataBaseTool }
+declare const database: DataBase
+export {database}
