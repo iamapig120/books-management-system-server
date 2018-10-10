@@ -13,10 +13,10 @@ if (!Array.prototype.flat) {
   }
 }
 
-const throwIfMissing = (
-  functionName = 'This function',
-  parameterName = '.'
-) => {
+/**
+ * 抛出一个异常，提示参数缺失
+ */
+const throwIfMissing = () => {
   throw new Error(`Missing parameter, check the parameters`)
 }
 
