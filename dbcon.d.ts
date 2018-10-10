@@ -106,7 +106,7 @@ declare const directQuery: (
 /**
  * 连接数据库，返回一个DataBase对象以进行操作
  */
-declare const connect: (p: string | mysql.PoolConfig) => DataBase
+function connect(p: string | mysql.PoolConfig): DataBase
 /**
  * 数据库对象实例
  */

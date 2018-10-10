@@ -13,8 +13,23 @@ if (!Array.prototype.flat) {
   }
 }
 
-const connect = p => {
-  const pool = mysql.createPool(p)
+const throwIfMissing = (
+  functionName = 'This function',
+  parameterName = '.'
+) => {
+  throw new Error(`Missing parameter, check the parameters`)
+}
+
+function connect(
+  {
+    host = 'localhost',
+    waitForConnections = true,
+    connectionLimit = 0xff,
+    queueLimit = 0,
+    charset = 'utf8'
+  } = throwIfMissing()
+) {
+  const pool = mysql.createPool(arguments[0])
   /**
    * Library数据库对象
    * @type {{[x: string]: DataBaseTool}}
@@ -30,8 +45,8 @@ const connect = p => {
           obj[prop0] = {
             /**
              * Get方法，参数为两个对象，key为列名，value为值，第二个参数可选
-             * @param {Object} params 一个对象，key为列名，value为值
-             * @param {Object} orderBy 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
+             * @param {Object} [params] 一个对象，key为列名，value为值
+             * @param {Object} [orderBy] 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
              */
             select: (params = {}, orderBy = {}) => {
               const paramsLength = Object.keys(params).length
@@ -91,7 +106,7 @@ const connect = p => {
             /**
              * @param {Array[String|number|null]} params 所有新行的参数，按照表顺序传入
              */
-            insert: (...params) => {
+            insert: (params = throwIfMissing()) => {
               const paramsLength = params.length
               if (!obj[prop0]._insertString[paramsLength]) {
                 obj[prop0]._insertString[paramsLength] = (() => {
@@ -121,7 +136,7 @@ const connect = p => {
              * @param {Object} params1 键值对1，用于表明要更新的内容
              * @param {Object} params2 键值对2，用于查找对应的行
              */
-            update: (params1, params2) => {
+            update: (params1 = throwIfMissing(), [params2]) => {
               const params1Length = Object.keys(params1).length
               const params2Length = Object.keys(params2).length
               if (!obj[prop0]._updateString[params1Length][params2Length]) {
@@ -178,7 +193,7 @@ const connect = p => {
             ),
             /**
              * Del方法，参数为一个对象，key为列名，value为值
-             * @param {Object} params 一个对象，key为列名，value为值
+             * @param {Object} [params] 一个对象，key为列名，value为值
              */
             delete: (params = {}) => {
               const paramsLength = Object.keys(params).length
@@ -238,10 +253,10 @@ const connect = p => {
   /**
    * 直接对数据库本身执行查询
    * @param {string} sqlStr 要进行填充的SQL语句
-   * @param {Array<string|null|number>} params 一个数组，按顺序包含SQL语句的所有的参数
+   * @param {Array<string|null|number>} [params] 一个数组，按顺序包含SQL语句的所有的参数
    * @return {Promise<any>} 返回一个Promise对象
    */
-  const directQuery = (sqlStr, params) => {
+  const directQuery = (sqlStr = throwIfMissing(), params) => {
     return new Promise(
       (resolve,
       reject0 => {
