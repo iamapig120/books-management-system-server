@@ -3,11 +3,7 @@ const dbInstance = dbcon.connect({
   host: 'localhost',
   user: 'root',
   password: 'Iamapig120',
-  database: 'library',
-  charset: 'utf8',
-  waitForConnections: true,
-  connectionLimit: 0xff,
-  queueLimit: 0
+  database: 'library'
 })
 const tables = dbInstance.tables
 const res1 = tables.users.select({
