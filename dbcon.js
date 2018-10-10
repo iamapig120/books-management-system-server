@@ -40,9 +40,9 @@ function connect(
       /**
        * @returns {DataBaseTool}
        */
-      get: (obj, prop0) => {
-        if (!obj[prop0]) {
-          obj[prop0] = {
+      get: (obj, tableName) => {
+        if (!obj[tableName]) {
+          obj[tableName] = {
             /**
              * Get方法，参数为两个对象，key为列名，value为值，第二个参数可选
              * @param {Object} [params] 一个对象，key为列名，value为值
@@ -52,8 +52,8 @@ function connect(
               const paramsLength = Object.keys(params).length
               const orderKeys = Object.keys(orderBy)
               const orderByLength = orderKeys.length
-              if (!obj[prop0]._getString[paramsLength][orderByLength]) {
-                obj[prop0]._getString[paramsLength][orderByLength] = (() => {
+              if (!obj[tableName]._getString[paramsLength][orderByLength]) {
+                obj[tableName]._getString[paramsLength][orderByLength] = (() => {
                   let returnString = 'SELECT * FROM ??'
                   if (paramsLength > 0) {
                     returnString += ' WHERE'
@@ -76,9 +76,9 @@ function connect(
               }
               return new Promise((resolve, reject) => {
                 pool.query(
-                  obj[prop0]._getString[paramsLength][orderByLength],
+                  obj[tableName]._getString[paramsLength][orderByLength],
                   [
-                    prop0,
+                    tableName,
                     ...(() => Object.entries(params).flat())(),
                     ...orderKeys
                   ],
@@ -102,14 +102,14 @@ function connect(
                 }
               }
             ),
-            get: (...p) => obj[prop0].select(...p),
+            get: (...p) => obj[tableName].select(...p),
             /**
              * @param {Array[String|number|null]} params 所有新行的参数，按照表顺序传入
              */
             insert: (params = throwIfMissing()) => {
               const paramsLength = params.length
-              if (!obj[prop0]._insertString[paramsLength]) {
-                obj[prop0]._insertString[paramsLength] = (() => {
+              if (!obj[tableName]._insertString[paramsLength]) {
+                obj[tableName]._insertString[paramsLength] = (() => {
                   let returnString = 'INSERT INTO ?? VALUES ('
                   for (let i = 0; i < paramsLength - 1; i++) {
                     returnString += '?,'
@@ -120,8 +120,8 @@ function connect(
               }
               return new Promise((resolve, reject) => {
                 pool.query(
-                  obj[prop0]._insertString[paramsLength],
-                  [prop0, ...params],
+                  obj[tableName]._insertString[paramsLength],
+                  [tableName, ...params],
                   (err, result, fields) => {
                     if (err) {
                       reject(err)
@@ -139,8 +139,8 @@ function connect(
             update: (params1 = throwIfMissing(), [params2]) => {
               const params1Length = Object.keys(params1).length
               const params2Length = Object.keys(params2).length
-              if (!obj[prop0]._updateString[params1Length][params2Length]) {
-                obj[prop0]._updateString[params1Length][
+              if (!obj[tableName]._updateString[params1Length][params2Length]) {
+                obj[tableName]._updateString[params1Length][
                   params2Length
                 ] = (() => {
                   let returnString = 'UPDATE ?? SET'
@@ -157,18 +157,18 @@ function connect(
               }
               return new Promise((resolve, reject) => {
                 pool.query(
-                  obj[prop0]._updateString[params1Length][params2Length],
+                  obj[tableName]._updateString[params1Length][params2Length],
                   [
-                    prop0,
+                    tableName,
                     ...(() => Object.entries(params1).flat())(),
                     ...(() => Object.entries(params2).flat())()
                   ],
                   (err, result, fields) => {
                     console.log(
-                      obj[prop0]._updateString[params1Length][params2Length]
+                      obj[tableName]._updateString[params1Length][params2Length]
                     )
                     console.log([
-                      prop0,
+                      tableName,
                       ...(() => Object.entries(params1).flat())(),
                       ...(() => Object.entries(params2).flat())()
                     ])
@@ -197,8 +197,8 @@ function connect(
              */
             delete: (params = {}) => {
               const paramsLength = Object.keys(params).length
-              if (!obj[prop0]._deleteString[paramsLength]) {
-                obj[prop0]._deleteString[paramsLength] = (() => {
+              if (!obj[tableName]._deleteString[paramsLength]) {
+                obj[tableName]._deleteString[paramsLength] = (() => {
                   let returnString = 'DELETE FROM ??'
                   if (paramsLength > 0) {
                     returnString += ' WHERE'
@@ -213,9 +213,9 @@ function connect(
               const confirmFun = () =>
                 new Promise((resolve, reject) => {
                   pool.query(
-                    obj[prop0]._deleteString[paramsLength],
+                    obj[tableName]._deleteString[paramsLength],
                     [
-                      prop0,
+                      tableName,
                       ...(() => Object.entries(params).flat())(),
                       ...orderKeys
                     ],
@@ -243,7 +243,7 @@ function connect(
             //query: directQuery
           }
         }
-        return Object.freeze(obj[prop0])
+        return Object.freeze(obj[tableName])
       },
       set: (obj, prop, value) => {
         return false
