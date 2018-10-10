@@ -3,35 +3,35 @@
 import mysql = require('mysql')
 interface Table {
   /**
-   * Get方法，用于查询数据库，返回一个Promise对象，参数为两个对象，key为列名，value为值，第二个参数可选
+   * Get方法，Select别名，用于查询数据库，返回一个Promise对象
    * @returns Promise对象，resolve时传入查询结果
    */
   get(
     /**
      * 一个对象，key为列名，value为值
      */
-    params: { [x: string]: string | null | number },
+    params?: { [x: string]: string | null | number },
     /**
      * 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
      */
-    orderBy: { [x: string]: string | null | number }
+    orderBy?: { [x: string]: string | null | number }
   ): Promise<any>
   /**
-   * Select方法，Get别名，参数为两个对象，key为列名，value为值，第二个参数可选
+   * Select方法，参数为两个对象，key为列名，value为值，第二个参数可选
    * @returns Promise对象，resolve时传入查询结果
    */
   select(
     /**
      * 一个对象，key为列名，value为值
      */
-    params: { [x: string]: string | null | number },
+    params?: { [x: string]: string | null | number },
     /**
      * 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
      */
-    orderBy: { [x: string]: string | null | number }
+    orderBy?: { [x: string]: string | null | number }
   ): Promise<any>
   /**
-   * Insert方法，插入一个新行
+   * Insert方法，以在表中插入一个新行
    * @returns Promise对象，resolve时传入insert结果
    */
   insert(
@@ -41,7 +41,7 @@ interface Table {
     params: Array<string | number | null>
   ): Promise<any>
   /**
-   * Update，更新行，类似于Select的玩法
+   * Update，更新表中若干行，参考Select方法来找到目标行
    * @returns Promise对象，resolve时传入update结果
    */
   update(
@@ -52,7 +52,7 @@ interface Table {
     /**
      * 键值对2，用于查找对应的行
      */
-    params2: { [x: string]: string | null | number }
+    params2?: { [x: string]: string | null | number }
   ): Promise<any>
   /**
    * Delete方法，删除行
@@ -73,11 +73,50 @@ interface Table {
     /**
      * 一个对象，key为列名，value为值
      */
-    params: { [x: string]: string | null | number }
+    params?: { [x: string]: string | null | number }
   ): Promise<any>
   /**
    * 直接对数据库执行查询，表名并不会起到任何作用
    * @return {Promise<any>} 返回一个Promise对象，resolve时传入该语句查询结果
+   */
+  // query: (
+  //   /**
+  //    * SQL语句，使用"??"、"?"作为占位符
+  //    */
+  //   sqlStr: string,
+  //   /**
+  //    * 数组，按顺序包含SQL语句的所有占位符对应的值
+  //    */
+  //   params: Array<string | number | null>
+  // ) => Promise<any>
+}
+/**
+ * 直接对数据库本身执行查询操作
+ */
+declare const directQuery: (
+  /**
+   * SQL语句，使用"??"、"?"作为占位符
+   */
+  sqlStr: string,
+  /**
+   * 数组，按顺序包含SQL语句的所有占位符对应的值
+   */
+  params?: Array<string | number | null>
+) => Promise<any>
+/**
+ * 连接数据库，返回一个DataBase对象以进行操作
+ */
+declare const connect: (p: string | mysql.PoolConfig) => DataBase
+/**
+ * 数据库对象实例
+ */
+interface DataBase {
+  /**
+   * 数据库中的所有表
+   */
+  tables: { [x: string]: Table }
+  /**
+   * 直接对数据库本身执行查询操作
    */
   query: (
     /**
@@ -87,31 +126,7 @@ interface Table {
     /**
      * 数组，按顺序包含SQL语句的所有占位符对应的值
      */
-    params: Array<string | number | null>
+    params?: Array<string | number | null>
   ) => Promise<any>
-}
-/**
- * 直接对数据库本身执行查询操作
- */
-declare const directQuery: (
-  sqlStr: string,
-  params: Array<string | number | null>
-) => Promise<any>
-/**
- * 连接数据库，返回一个数据库对象以进行操作
- */
-declare const connect: (p: string | mysql.PoolConfig) => DataBase
-/**
- * 数据库工具对象实例的数据库对象
- */
-interface DataBase {
-  /**
-   * 访问数据库的所有表
-   */
-  tables: { [x: string]: Table }
-  /**
-   * 直接对数据库本身执行查询操作
-   */
-  //query: (sqlStr: string, params: Array<string | number | null>) => Promise<any>
 }
 export { connect }

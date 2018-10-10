@@ -33,7 +33,7 @@ const connect = p => {
              * @param {Object} params 一个对象，key为列名，value为值
              * @param {Object} orderBy 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
              */
-            get: (params = {}, orderBy = {}) => {
+            select: (params = {}, orderBy = {}) => {
               const paramsLength = Object.keys(params).length
               const orderKeys = Object.keys(orderBy)
               const orderByLength = orderKeys.length
@@ -87,7 +87,7 @@ const connect = p => {
                 }
               }
             ),
-            select: (...p) => obj[prop0].get(...p),
+            get: (...p) => obj[prop0].get(...p),
             /**
              * @param {Array[String|number|null]} params 所有新行的参数，按照表顺序传入
              */
@@ -218,7 +218,7 @@ const connect = p => {
                 return { confirm: () => confirmFun() }
               }
             },
-            _deleteString: {},
+            _deleteString: {}
             /**
              * 直接执行查询，表名并不会起到任何作用
              * @param {string} sqlStr 要进行填充的SQL语句
