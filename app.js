@@ -1,7 +1,5 @@
-const DB = require('./dbcon')
-const connect = DB.connect
-const db = DB.database
-connect({
+const dbcon = require('./dbcon')
+const dbInstance = dbcon.connect({
   host: 'localhost',
   user: 'root',
   password: 'Iamapig120',
@@ -11,14 +9,15 @@ connect({
   connectionLimit: 0xff,
   queueLimit: 0
 })
-const res1 = db.users.select({
+const tables = dbInstance.tables
+const res1 = tables.users.select({
   id: 4,
   name: 'handle'
 })
-const res2 = db.users.get({
+const res2 = tables.users.get({
   password: 'pass2'
 })
-const res3 = db.users.get({
+const res3 = tables.users.get({
   id: 7
 })
 ;(async () => {

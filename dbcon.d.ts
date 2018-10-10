@@ -1,41 +1,57 @@
 /// <reference types="node" />
 
 import mysql = require('mysql')
-interface DataBaseTool {
+interface DataBaseTable {
   /**
    * Get方法，用于查询数据库，返回一个Promise对象，参数为两个对象，key为列名，value为值，第二个参数可选
-   * @param params 一个对象，key为列名，value为值
-   * @param orderBy 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
    * @returns Promise对象，resolve时传入查询结果
    */
   get(
+    /**
+     * 一个对象，key为列名，value为值
+     */
     params: { [x: string]: string | null | number },
+    /**
+     * 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
+     */
     orderBy: { [x: string]: string | null | number }
   ): Promise<any>
   /**
    * Select方法，Get别名，参数为两个对象，key为列名，value为值，第二个参数可选
-   * @param params 一个对象，key为列名，value为值
-   * @param orderBy 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
    * @returns Promise对象，resolve时传入查询结果
    */
   select(
+    /**
+     * 一个对象，key为列名，value为值
+     */
     params: { [x: string]: string | null | number },
+    /**
+     * 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
+     */
     orderBy: { [x: string]: string | null | number }
   ): Promise<any>
   /**
    * Insert方法，插入一个新行
-   * @param params 所有新行的参数，按照表顺序传入
    * @returns Promise对象，resolve时传入insert结果
    */
-  insert(params: Array<string | number | null>): Promise<any>
+  insert(
+    /**
+     * 所有新行的参数，按照表顺序传入
+     */
+    params: Array<string | number | null>
+  ): Promise<any>
   /**
    * Update，更新行，类似于Select的玩法
-   * @param params1 键值对1，用于表明要更新的内容
-   * @param params2 键值对2，用于查找对应的行
    * @returns Promise对象，resolve时传入update结果
    */
   update(
+    /**
+     * 键值对1，用于表明要更新的内容
+     */
     params1: { [x: string]: string | null | number },
+    /**
+     * 键值对2，用于查找对应的行
+     */
     params2: { [x: string]: string | null | number }
   ): Promise<any>
   /**
@@ -51,20 +67,51 @@ interface DataBaseTool {
   }
   /**
    * Delete方法，删除行
-   * @param params 一个对象，key为列名，value为值
    * @returns Promise对象，resolve时传入delete结果
    */
-  delete(params: { [x: string]: string | null | number }): Promise<any>
+  delete(
+    /**
+     * 一个对象，key为列名，value为值
+     */
+    params: { [x: string]: string | null | number }
+  ): Promise<any>
+  /**
+   * 直接对数据库执行查询，表名并不会起到任何作用
+   * @return {Promise<any>} 返回一个Promise对象，resolve时传入该语句查询结果
+   */
+  query: (
+    /**
+     * SQL语句，使用"??"、"?"作为占位符
+     */
+    sqlStr: string,
+    /**
+     * 数组，按顺序包含SQL语句的所有占位符对应的值
+     */
+    params: Array<string | number | null>
+  ) => Promise<any>
 }
 /**
- * 连接数据库并创建一个连接池
+ * 直接对数据库本身执行查询操作
  */
-declare const connect: (p: string | mysql.PoolConfig) => void
+declare const directQuery: (
+  sqlStr: string,
+  params: Array<string | number | null>
+) => Promise<any>
+/**
+ * 连接数据库，返回一个数据库对象以进行操作
+ */
+declare const connect: (p: string | mysql.PoolConfig) => DataBase
+/**
+ * 数据库工具对象实例的数据库对象
+ */
 interface DataBase {
-  [x: string]: DataBaseTool
+  /**
+   * 访问数据库的所有表
+   */
+  tables: { [x: string]: DataBaseTable }
+  /**
+   * 直接对数据库本身执行查询操作
+   */
+  query: (sqlStr: string, params: Array<string | number | null>) => Promise<any>
 }
-/**
- * 整个数据库对象
- */
-declare const database: DataBase
-export { database, connect }
+export { connect }
