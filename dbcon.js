@@ -87,7 +87,7 @@ const connect = p => {
                 }
               }
             ),
-            get: (...p) => obj[prop0].get(...p),
+            get: (...p) => obj[prop0].select(...p),
             /**
              * @param {Array[String|number|null]} params 所有新行的参数，按照表顺序传入
              */
