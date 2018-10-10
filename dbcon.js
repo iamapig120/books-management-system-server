@@ -225,7 +225,7 @@ const connect = p => {
              * @param {Array<string|null|number>} params 一个数组，按顺序包含SQL语句的所有的参数
              * @return {Promise<any>} 返回一个Promise对象
              */
-            query: directQuery
+            //query: directQuery
           }
         }
         return Object.freeze(obj[prop0])

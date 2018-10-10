@@ -1,7 +1,7 @@
 /// <reference types="node" />
 
 import mysql = require('mysql')
-interface DataBaseTable {
+interface Table {
   /**
    * Get方法，用于查询数据库，返回一个Promise对象，参数为两个对象，key为列名，value为值，第二个参数可选
    * @returns Promise对象，resolve时传入查询结果
@@ -108,10 +108,10 @@ interface DataBase {
   /**
    * 访问数据库的所有表
    */
-  tables: { [x: string]: DataBaseTable }
+  tables: { [x: string]: Table }
   /**
    * 直接对数据库本身执行查询操作
    */
-  query: (sqlStr: string, params: Array<string | number | null>) => Promise<any>
+  //query: (sqlStr: string, params: Array<string | number | null>) => Promise<any>
 }
 export { connect }
