@@ -14,7 +14,11 @@ interface Table {
     /**
      * 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
      */
-    orderBy?: { [x: string]: boolean }
+    orderBy?: { [x: string]: boolean },
+    /**
+     * 一个字符串数组，选取出哪些列
+     */
+    columns?: Array<string>
   ): Promise<any>
   /**
    * Select方法，参数为两个对象，key为列名，value为值，第二个参数可选
@@ -28,7 +32,11 @@ interface Table {
     /**
      * 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
      */
-    orderBy?: { [x: string]: boolean }
+    orderBy?: { [x: string]: boolean },
+    /**
+     * 一个字符串数组，选取出哪些列
+     */
+    columns?: Array<string>
   ): Promise<any>
   /**
    * Insert方法，以在表中插入一个新行
