@@ -44,18 +44,19 @@ const checkCache = (
       .createHash('md5')
       .update(getKeyFunction(req))
       .digest('hex')
-    res.send = function(resData) {
-      redisClient.setex(key, expiredTime, resData)
-      sendFunction.call(this, resData)
-      console.log('--响应用时: ', performance.now() - start)
-    }
     redisClient.get(key, (err, value) => {
       if (err) {
         throw err
       }
       if (value) {
-        res.send(value)
+        sendFunction.call(res, value)
+        console.log('--响应用时: ', performance.now() - start)
       } else {
+        res.send = resData => {
+          redisClient.setex(key, expiredTime, resData)
+          sendFunction.call(res, resData)
+          console.log('--响应用时: ', performance.now() - start)
+        }
         fun.call(null, req, res, next)
       }
     })
