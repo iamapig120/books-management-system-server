@@ -3,7 +3,7 @@
 import mysql = require('mysql')
 interface Table {
   /**
-   * Get方法，Select别名，用于查询数据库，返回一个Promise对象
+   * Get方法，Select别名，用于查询数据库，参数为两个对象，key为列名，value为值，第二、三个参数可选
    * @returns Promise对象，resolve时传入查询结果
    */
   get(
@@ -21,7 +21,7 @@ interface Table {
     columns?: Array<string>
   ): Promise<any>
   /**
-   * Select方法，参数为两个对象，key为列名，value为值，第二个参数可选
+   * Select方法，用于查询数据库，参数为两个对象，key为列名，value为值，第二、三个参数可选
    * @returns Promise对象，resolve时传入查询结果
    */
   select(

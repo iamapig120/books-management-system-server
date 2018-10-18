@@ -20,7 +20,7 @@ const redisClient = redis.createClient({
 
 /**
  * Redis 缓存检查机制
- * @param {Function} fun Roter处理函数，必须使用 req.send() 来返回数据
+ * @param {Function} fun Router 处理函数，必须使用 req.send() 来返回数据
  * @param {number} expiredTime 缓存过期时间，默认值为 7 天
  * @description 参考了 https://www.jianshu.com/p/9852d59280ca
  */
@@ -67,8 +67,8 @@ const routerCategories = express.Router()
 const categories = tables.categories
 const getCategoriesId = async (req, res, next) => {
   const rand = Math.random().toString(16)
-  let parent_id = req.params.id
-  if (parent_id === '0') {
+  let parent_id = parseInt(req.params.id)
+  if (parent_id === 0) {
     parent_id = null
   }
   const result = categories.select(
