@@ -20,6 +20,48 @@ const throwIfMissing = () => {
   throw new Error(`Missing parameter, check the parameters`)
 }
 
+function newProxy() {
+  return new Proxy(
+    {},
+    {
+      get: (obj, prop0) => {
+        if (!obj[prop0]) {
+          obj[prop0] = new Proxy(
+            {},
+            {
+              get: (obj, prop0) => {
+                if (!obj[prop0]) {
+                  obj[prop0] = new Proxy(
+                    {},
+                    {
+                      get: (obj, prop0) => {
+                        if (!obj[prop0]) {
+                          obj[prop0] = {}
+                        }
+                        return obj[prop0]
+                      },
+                      set: (obj, prop0, value) => {
+                        obj[prop0] = value
+                      }
+                    }
+                  )
+                }
+                return obj[prop0]
+              },
+              set: (obj, prop0, value) => {
+                obj[prop0] = value
+              }
+            }
+          )
+        }
+        return obj[prop0]
+      },
+      set: (obj, prop0, value) => {
+        obj[prop0] = value
+      }
+    }
+  )
+}
 function connect(
   {
     host = 'localhost',
@@ -45,26 +87,43 @@ function connect(
           obj[tableName] = {
             /**
              * Get方法，参数为两个对象，key为列名，value为值，第二个参数可选
-             * @param {Object} [params] 一个对象，key为列名，value为值
+             * @param {Object} [where] 一个对象，key为列名，value为值
              * @param {Object} [orderBy] 依照什么排序，key为列名，value为是否ASC升序，false为DESC降序，true则为ASC升序
              * @param {Array<string} [columns] 一个字符串数组，选取出哪些列
+             * @param {Array<number} [limit] 一个大小2的数组，限制选取范围
              */
-            select: (params = {}, orderBy = {}, columns = []) => {
-              const paramsKeys = Object.keys(params)
+            select: ({
+              where = {},
+              orderBy = {},
+              columns = [],
+              limit = []
+            } = {}) => {
+              const paramsKeys = Object.keys(where)
               const paramsLength = paramsKeys.length
               const paramsIndex = paramsKeys.reduce(
                 (previousValue, currentValue) => {
-                  if (params[currentValue] === null) {
+                  if (where[currentValue] === null) {
                     return (previousValue += '0')
                   } else {
                     return (previousValue += '1')
                   }
                 },
-                ''
+                '0'
               )
               const orderKeys = Object.keys(orderBy)
+              const orderIndex = orderKeys.reduce(
+                (previousValue, currentValue) => {
+                  if (orderBy[currentValue] === false) {
+                    return (previousValue += '0')
+                  } else {
+                    return (previousValue += '1')
+                  }
+                },
+                '0'
+              )
               const orderByLength = orderKeys.length
               const columnsLength = columns.length
+              const limitLength = limit.length
               let columnsString
               if (columnsLength === 0) {
                 columnsString = '*'
@@ -73,23 +132,23 @@ function connect(
               }
               if (
                 !obj[tableName]._getString[columnsLength][paramsIndex][
-                  orderByLength
-                ]
+                  orderIndex
+                ][limitLength]
               ) {
                 obj[tableName]._getString[columnsLength][paramsIndex][
-                  orderByLength
-                ] = (() => {
+                  orderIndex
+                ][limitLength] = (() => {
                   let returnString = `SELECT ${columnsString} FROM ??`
                   if (paramsLength > 0) {
                     returnString += ' WHERE'
                     for (let i = 0; i < paramsLength - 1; i++) {
-                      if (params[paramsKeys[i]] === null) {
+                      if (where[paramsKeys[i]] === null) {
                         returnString += ' ??<=>? AND'
                       } else {
                         returnString += ' ??=? AND'
                       }
                     }
-                    if (params[paramsKeys[paramsLength - 1]] === null) {
+                    if (where[paramsKeys[paramsLength - 1]] === null) {
                       returnString += ' ??<=>?'
                     } else {
                       returnString += ' ??=?'
@@ -98,58 +157,47 @@ function connect(
                   if (orderByLength > 0) {
                     returnString += ' ORDER BY'
                     for (let i = 0; i < orderByLength - 1; i++) {
-                      returnString += ' ?'
+                      returnString += ' ??'
                       returnString += orderBy[orderKeys[i]] ? ' ASC,' : ' DESC,'
                     }
-                    returnString += ' ?'
+                    returnString += ' ??'
                     returnString += orderBy[orderKeys[orderByLength - 1]]
                       ? ' ASC'
                       : ' DESC'
                   }
+                  if (limitLength === 2) {
+                    returnString += ' LIMIT ?, ?'
+                  }
                   return returnString
                 })()
               }
+              console.log(
+                obj[tableName]._getString[columnsLength][paramsIndex][
+                  orderIndex
+                ][limitLength]
+              )
               return new Promise((resolve, reject) => {
                 pool.query(
                   obj[tableName]._getString[columnsLength][paramsIndex][
-                    orderByLength
-                  ],
+                    orderIndex
+                  ][limitLength],
                   [
                     ...columns,
                     tableName,
-                    ...(() => Object.entries(params).flat())(),
-                    ...orderKeys
+                    ...Object.entries(where).flat(),
+                    ...orderKeys,
+                    ...limit
                   ],
                   (err, result, fields) => {
                     if (err) {
-                      reject(err)
+                      throw err
                     }
                     resolve(result)
                   }
                 )
               })
             },
-            _getString: new Proxy(
-              {},
-              {
-                get: (obj, prop0) => {
-                  if (!obj[prop0]) {
-                    obj[prop0] = new Proxy(
-                      {},
-                      {
-                        get: (obj, prop0) => {
-                          if (!obj[prop0]) {
-                            obj[prop0] = {}
-                          }
-                          return obj[prop0]
-                        }
-                      }
-                    )
-                  }
-                  return obj[prop0]
-                }
-              }
-            ),
+            _getString: newProxy(),
             get: (...p) => obj[tableName].select(...p),
             /**
              * @param {Array[String|number|null]} params 所有新行的参数，按照表顺序传入
@@ -172,7 +220,7 @@ function connect(
                   [tableName, ...params],
                   (err, result, fields) => {
                     if (err) {
-                      reject(err)
+                      throw err
                     }
                     resolve(result)
                   }
@@ -207,7 +255,6 @@ function connect(
                     returnString += ' ??=? ,'
                   }
                   returnString += ' ??=?'
-
                   if (params2Length > 0) {
                     returnString += ' WHERE'
                     for (let i = 0; i < params2Length - 1; i++) {
@@ -231,12 +278,12 @@ function connect(
                   obj[tableName]._updateString[params1Length][params2Index],
                   [
                     tableName,
-                    ...(() => Object.entries(params1).flat())(),
-                    ...(() => Object.entries(params2).flat())()
+                    ...Object.entries(params1).flat(),
+                    ...Object.entries(params2).flat()
                   ],
                   (err, result, fields) => {
                     if (err) {
-                      reject(err)
+                      throw err
                     }
                     resolve(result)
                   }
@@ -296,14 +343,10 @@ function connect(
                 new Promise((resolve, reject) => {
                   pool.query(
                     obj[tableName]._deleteString[paramsIndex],
-                    [
-                      tableName,
-                      ...(() => Object.entries(params).flat())(),
-                      ...orderKeys
-                    ],
+                    [tableName, ...Object.entries(params).flat(), ...orderKeys],
                     (err, result, fields) => {
                       if (err) {
-                        reject(err)
+                        throw err
                       }
                       resolve(result)
                     }
@@ -315,7 +358,82 @@ function connect(
                 return { confirm: () => confirmFun() }
               }
             },
-            _deleteString: {}
+            _deleteString: {},
+            /**
+             * 按照条件，对某列或全部行进行计数
+             */
+            count: (column, where) => {
+              const columnsKeys = Object.keys(column)
+              const columnsLenght = columnsKeys.length
+              if (columnsLenght > 1) {
+                throw Error('Count columns too much.')
+              }
+              const whereKeys = Object.keys(where)
+              const whereLength = whereKeys.length
+              const whereIndex = whereLength.reduce(
+                (previousValue, currentValue) => {
+                  if (params[currentValue] === null) {
+                    return (previousValue += '0')
+                  } else {
+                    return (previousValue += '1')
+                  }
+                },
+                ''
+              )
+              if (!obj[tableName][columnsKeys][whereIndex]) {
+                obj[tableName][columnsKeys][whereIndex] = () => {
+                  let returnString
+                  if (columnsLenght === 0) {
+                    returnString = 'SELECT COUNT(*) FROM ??'
+                  } else {
+                    returnString = 'SELECT COUNT(?) AS ? FROM ??'
+                  }
+                  if (whereKeys > 0) {
+                    returnString += ' WHERE'
+                    for (let i = 0; i < whereLength - 1; i++) {
+                      if (params[whereKeys[i]] === null) {
+                        returnString += ' ??<=>? AND'
+                      } else {
+                        returnString += ' ??=? AND'
+                      }
+                    }
+                    if (params[whereKeys[whereLength - 1]] === null) {
+                      returnString += ' ??<=>?'
+                    } else {
+                      returnString += ' ??=?'
+                    }
+                  }
+                  return returnString
+                }
+              }
+              return new Promise((resolve, reject) => {
+                pool.query(
+                  obj[tableName][columnsKeys][whereIndex],
+                  [
+                    ...Object.entries(column).flat(),
+                    tableName,
+                    ...Object.entries(where).flat()
+                  ],
+                  (err, result, fields) => {
+                    if (err) {
+                      throw err
+                    }
+                    resolve(result)
+                  }
+                )
+              })
+            },
+            _countString: new Proxy(
+              {},
+              {
+                get: (obj, prop0) => {
+                  if (!obj[prop0]) {
+                    obj[prop0] = {}
+                  }
+                  return obj[prop0]
+                }
+              }
+            )
             /**
              * 直接执行查询，表名并不会起到任何作用
              * @param {string} sqlStr 要进行填充的SQL语句
@@ -341,10 +459,10 @@ function connect(
   const directQuery = (sqlStr = throwIfMissing(), params) => {
     return new Promise(
       (resolve,
-      reject0 => {
+      reject => {
         pool.query(sqlStr, params, (err, result, fields) => {
           if (err) {
-            reject(err)
+            throw err
           }
           resolve(result)
         })

@@ -34,16 +34,21 @@ const checkCache = (
     } else {
       query = request.body
     }
-    return [request.method, eq.url, JSON.stringify(query)].join('|')
+    const hash = crypto
+      .createHash('md5')
+      .update(
+        getKeyFunction(
+          [request.method, request.url, JSON.stringify(query)].join('|')
+        )
+      )
+      .digest('hex')
+    return hash
   }
 ) => {
   return (req, res, next) => {
     const start = performance.now()
     const sendFunction = res.send
-    const key = crypto
-      .createHash('md5')
-      .update(getKeyFunction(req))
-      .digest('hex')
+    const key = getKeyFunction(req)
     redisClient.get(key, (err, value) => {
       if (err) {
         throw err
@@ -63,20 +68,28 @@ const checkCache = (
   }
 }
 
-const routerCategories = express.Router()
 const categories = tables.categories
+let categoriesLimit
+;(async () => {
+  categoriesLimit = (await categories.select({
+    orderBy: { id: false },
+    limit: [0, 1]
+  }))[0].id
+  console.log(categoriesLimit)
+})()
+const routerCategories = express.Router()
 const getCategoriesId = async (req, res, next) => {
-  let parent_id = parseInt(req.params.id)
-  if (parent_id === 0) {
+  let parent_id = req.params.id
+  if (parent_id === '0') {
     parent_id = null
   }
-  const result = categories.select(
-    {
+  const result = categories.select({
+    where: {
       parent_id
     },
-    { id: true },
-    ['id', 'code', 'name']
-  )
+    orderBy: { id: true },
+    columns: ['id', 'code', 'name']
+  })
   res.send(JSON.stringify(await result))
   next()
 }
@@ -91,10 +104,13 @@ routerCategories.get('/:id.json', (req, res, next) => {
 routerCategories.get(
   '/:id.json',
   checkCache(getCategoriesId, undefined, req => {
-    return 'categories-' + req.params.id
+    const id = parseInt(req.params.id)
+    if (id > categoriesLimit) {
+      id = -1
+    }
+    return 'json-categories-' + id
   })
 )
-
 app.use('/categories', routerCategories)
 app.listen(3000, () => console.log('Example app listening on port 3000!'))
 // db.users.delete().confirm()
