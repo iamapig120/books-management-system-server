@@ -66,7 +66,6 @@ const checkCache = (
 const routerCategories = express.Router()
 const categories = tables.categories
 const getCategoriesId = async (req, res, next) => {
-  const rand = Math.random().toString(16)
   let parent_id = parseInt(req.params.id)
   if (parent_id === 0) {
     parent_id = null
