@@ -171,11 +171,6 @@ function connect(
                   return returnString
                 })()
               }
-              console.log(
-                obj[tableName]._getString[columnsLength][paramsIndex][
-                  orderIndex
-                ][limitLength]
-              )
               return new Promise((resolve, reject) => {
                 pool.query(
                   obj[tableName]._getString[columnsLength][paramsIndex][

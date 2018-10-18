@@ -69,14 +69,21 @@ const checkCache = (
 }
 
 const categories = tables.categories
+/**
+ * 图书分类上限数目，用于减小缓存大小
+ */
 let categoriesLimit
 ;(async () => {
   categoriesLimit = (await categories.select({
     orderBy: { id: false },
     limit: [0, 1]
   }))[0].id
-  console.log(categoriesLimit)
+  console.log('分类目录上限已读取: ')
+  console.log('--上限数目为: ', categoriesLimit)
 })()
+/**
+ * 图书分类 路由
+ */
 const routerCategories = express.Router()
 const getCategoriesId = async (req, res, next) => {
   let parent_id = req.params.id
@@ -104,7 +111,7 @@ routerCategories.get('/:id.json', (req, res, next) => {
 routerCategories.get(
   '/:id.json',
   checkCache(getCategoriesId, undefined, req => {
-    const id = parseInt(req.params.id)
+    let id = parseInt(req.params.id)
     if (id > categoriesLimit) {
       id = -1
     }
@@ -112,6 +119,6 @@ routerCategories.get(
   })
 )
 app.use('/categories', routerCategories)
-app.listen(3000, () => console.log('Example app listening on port 3000!'))
+app.listen(3000, () => console.log('Express服务器已开始监听端口: 3000'))
 // db.users.delete().confirm()
 // db.users.update({ name: 'handle3', password: 'pass5' }, { id: 7 })
