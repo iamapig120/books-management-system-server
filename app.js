@@ -47,19 +47,19 @@ const checkCache = (
 ) => {
   return (req, res, next) => {
     const start = performance.now()
-    const sendFunction = res.send
     const key = getKeyFunction(req)
     redisClient.get(key, (err, value) => {
       if (err) {
         throw err
       }
       if (value) {
-        sendFunction.call(res, value)
+        res.send.call(res, value)
         console.log('--响应用时: ', performance.now() - start)
       } else {
+        const sendFunction = res.send
         res.send = resData => {
-          redisClient.setex(key, expiredTime, resData)
           sendFunction.call(res, resData)
+          redisClient.setex(key, expiredTime, resData)
           console.log('--响应用时: ', performance.now() - start)
         }
         fun.call(null, req, res, next)
