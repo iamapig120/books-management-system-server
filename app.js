@@ -1,6 +1,10 @@
 const express = require('express')
 const app = express()
 const ColorLog = require('sim-color-log')
+const logBanner = require('./lib/others/logBanner')
+
+// 输出 Banner
+logBanner()
 
 // 访问 Logs ，所有请求方式路由
 const morganLogs = require('./router/all/morganLogs')
