@@ -1,7 +1,8 @@
 const express = require('express')
-const mysqlClient = require('../lib/sql/mysqlClient')
+const mysqlClient = require('../../lib/sql/mysqlClient')
+const checkCache = require('../../lib/router/functions/checkCache')
 const categories = mysqlClient.tables.categories
-const checkCache = require('../lib/router/functions/checkCache')
+const ColorLog = require('sim-color-log')
 /**
  * 图书分类上限数目，用于减小缓存大小
  */
@@ -11,28 +12,28 @@ let categoriesLimit
     orderBy: { id: false },
     limit: [0, 1]
   }))[0].id
-  console.log('分类目录上限已读取: ')
-  console.log('--上限数目为: ', categoriesLimit)
+  ColorLog.log('分类目录上限已读取: ')
+  ColorLog.log('上限数目为: ' + categoriesLimit)
 })()
 /**
  * 图书分类 路由
  */
 const routerCategories = express.Router()
 const getCategoriesId = async (req, res, next) => {
-  let parent_id = req.params.id
-  if (parent_id === '0') {
-    parent_id = null
+  let parentId = req.params.id
+  if (parentId === '0') {
+    parentId = null
   }
   const result = categories.select({
     where: {
-      parent_id
+      parent_Id: parentId
     },
     orderBy: { id: true },
     columns: ['id', 'code', 'name']
   })
   const resultName = categories.select({
     where: {
-      id: parent_id
+      id: parentId
     },
     orderBy: { id: true },
     columns: ['id', 'code', 'name']
@@ -46,16 +47,8 @@ const getCategoriesId = async (req, res, next) => {
   next()
 }
 
-routerCategories.get('/:id.json', (req, res, next) => {
-  console.log('分类目录被请求: ')
-  console.log('--请求方式为: ', req.method)
-  console.log('--IP地址为: ', req.ip)
-  console.log('--时间戳: ', Date.now())
-  console.log('--分类目录ID: ', req.params.id)
-  next()
-})
 routerCategories.get(
-  '/:id.json',
+  '/categories/:id.json',
   checkCache(getCategoriesId, undefined, req => {
     let id = parseInt(req.params.id)
     if (id > categoriesLimit) {
