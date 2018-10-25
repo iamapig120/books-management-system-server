@@ -9,14 +9,22 @@
   "author": "Handle",
   "license": "ISC",
   "dependencies": {
-    "@types/express": "^4.16.0",
-    "@types/redis": "^2.8.7",
     "express": "^4.16.4",
+    "file-stream-rotator": "^0.4.0",
+    "morgan": "^1.9.1",
     "mysql": "^2.16.0",
-    "mysql2": "^1.6.1",
-    "redis": "^2.8.0"
+    "redis": "^2.8.0",
+    "sim-color-log": "0.0.3"
   },
   "devDependencies": {
-    "@types/mysql": "^2.15.5"
+    "@types/express": "^4.16.0",
+    "@types/mysql": "^2.15.5",
+    "@types/redis": "^2.8.7",
+    "eslint": "^5.7.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.9.0",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-promise": "^3.7.0",
+    "eslint-plugin-standard": "^4.0.0"
   }
 }

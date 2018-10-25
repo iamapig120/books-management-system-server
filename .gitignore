@@ -16,3 +16,6 @@ package-lock.json
 *.rar
 *.tar
 *.zip
+
+# 不包含程序运行过程中自动生成的 logs 目录
+/logs
