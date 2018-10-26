@@ -12,7 +12,9 @@ const FileStreamRotator = require('file-stream-rotator')
 const logDirectory = path.join(process.cwd(), '/logs')
 
 // 如果不存在目录，则创建
-fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
+if (!fs.existsSync(logDirectory)) {
+  fs.mkdirSync(logDirectory)
+}
 
 const accessLogStream = FileStreamRotator.getStream({
   date_format: 'YYYYMMDD',
@@ -21,6 +23,9 @@ const accessLogStream = FileStreamRotator.getStream({
   verbose: false
 })
 
-morgan.format('normal', ':remote-addr [:date] :method :url :status - :response-time ms')
+morgan.format(
+  'normal',
+  ':remote-addr [:date] :method :url :status - :response-time ms'
+)
 
 module.exports = morgan('normal', { stream: accessLogStream })
