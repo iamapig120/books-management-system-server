@@ -1,6 +1,6 @@
 const express = require('express')
 const mysqlClient = require('../../lib/sql/mysqlClient')
-const checkCache = require('../../lib/router/functions/checkCache')
+const checkCache = require('../../lib/router/decorators/checkCache')
 const categories = mysqlClient.tables.categories
 const ColorLog = require('sim-color-log')
 /**
