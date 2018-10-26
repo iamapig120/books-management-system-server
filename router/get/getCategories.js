@@ -19,6 +19,12 @@ let categoriesLimit
  * 图书分类 路由
  */
 const routerCategories = express.Router()
+/**
+ * 获取图书馆分类信息 ID
+ * @param {express.Request} req Request对象
+ * @param {express.Response} res Response对象
+ * @param {express.NextFunction} next NextFunction对象
+ */
 const getCategoriesId = async (req, res, next) => {
   let parentId = req.params.id
   if (parentId === '0') {
@@ -48,8 +54,7 @@ const getCategoriesId = async (req, res, next) => {
 }
 
 routerCategories.get(
-  '/categories/:id.json',
-  checkCache(getCategoriesId, undefined, req => {
+  '/categories/:id.json', checkCache(getCategoriesId, undefined, req => {
     let id = parseInt(req.params.id)
     if (id > categoriesLimit) {
       id = -1
