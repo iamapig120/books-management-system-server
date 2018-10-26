@@ -32,7 +32,7 @@ interface Table {
        */
       number
     ]
-  }): Promise<any>
+  }): Promise<Array<any>>
   /**
    * Select方法，用于查询数据库，参数为两个对象，key为列名，value为值，第二、三个参数可选
    * @returns Promise对象，resolve时传入查询结果
@@ -54,7 +54,7 @@ interface Table {
      * 一个大小为 2 的数值数组，限制查询结果的范围
      */
     limit?: [number, number]
-  }): Promise<any>
+  }): Promise<Array<any>>
   /**
    * Insert方法，以在表中插入一个新行
    * @returns Promise对象，resolve时传入insert结果
