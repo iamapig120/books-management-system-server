@@ -1,3 +1,5 @@
+'use strict'
+
 const express = require('express')
 const mysqlClient = require('../../lib/sql/mysqlClient')
 const checkCache = require('../../lib/router/decorators/checkCache')

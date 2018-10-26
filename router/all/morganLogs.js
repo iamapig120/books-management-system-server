@@ -1,4 +1,5 @@
 // 按日期 Log ，参考了 https://www.jianshu.com/p/ff6763c7d823
+'use strict'
 
 const morgan = require('morgan')
 const fs = require('fs')
