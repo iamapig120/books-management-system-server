@@ -39,24 +39,13 @@ const getCategoriesId = async (req, res, next) => {
     orderBy: { id: true },
     columns: ['id', 'code', 'name']
   })
-  const resultName = categories.select({
-    where: {
-      id: parentId
-    },
-    orderBy: { id: true },
-    columns: ['id', 'code', 'name']
-  })
-  res.send(
-    JSON.stringify({
-      key: await resultName,
-      categories: await result
-    })
-  )
+  res.send(JSON.stringify(await result))
   next()
 }
 
 routerCategories.get(
-  '/categories/:id.json', checkCache(getCategoriesId, undefined, req => {
+  '/categories/:id.json',
+  checkCache(getCategoriesId, undefined, req => {
     let id = parseInt(req.params.id)
     if (id > categoriesLimit) {
       id = -1
