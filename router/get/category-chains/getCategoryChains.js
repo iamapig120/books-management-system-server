@@ -3,8 +3,6 @@
 const express = require('express')
 
 const mysqlClient = require('../../../lib/sql/mysqlClient')
-const checkCache = require('../../../lib/router/checkCache')
-const categoriesLimitPromise = require('../../../lib/router/categoriesLimitPromise')
 const redisClient = require('../../../lib/sql/redisClient')
 const ColorLog = require('sim-color-log')
 
@@ -29,11 +27,6 @@ categories
   .then(ColorLog.ok('已成功载入所有分类数据至 Redis 数据库中'))
 
 /**
- * 图书分类上限数目，用于减小缓存大小
- */
-let categoriesLimit
-categoriesLimitPromise.then(value => (categoriesLimit = value))
-/**
  * 图书分类链 路由
  */
 const routerCategoryChains = express.Router()
@@ -55,6 +48,9 @@ const getCategoryChainFun = async (req, res, next) => {
   let queryRes
   while (
     await (async () => {
+      if (!(idToSearch >> 0)) {
+        return false
+      }
       queryRes = await new Promise(resolve =>
         redisClient.hget(REDIS_KEY, idToSearch || 0, (error, value) => {
           if (error) {
@@ -67,21 +63,6 @@ const getCategoryChainFun = async (req, res, next) => {
           }
         })
       )
-      if (!queryRes) {
-        queryRes = await categories.select({
-          where: {
-            id: idToSearch
-          }
-          // orderBy: { id: true }
-          // columns: ['id', 'code', 'name', 'parent_Id']
-        })
-        if (queryRes.length > 0) {
-          queryRes = queryRes[0]
-        } else {
-          queryRes = null
-        }
-        redisClient.hset(REDIS_KEY, idToSearch || 0, JSON.stringify(queryRes))
-      }
       return queryRes
     })()
   ) {
@@ -98,20 +79,7 @@ const getCategoryChainFun = async (req, res, next) => {
 
 routerCategoryChains.get(
   '/category-chains/:id.json',
-  (() => {
-    return checkCache({
-      handler: getCategoryChainFun,
-      getKeyFun: req => {
-        let id = parseInt(req.params.id)
-        if (id > categoriesLimit || !Number.isInteger(id)) {
-          id = -1
-        }
-        // return 'json-category-chain-' + id
-        return id
-      },
-      hashKey: 'category-chains'
-    })
-  })()
+  getCategoryChainFun
 )
 
 module.exports = routerCategoryChains
