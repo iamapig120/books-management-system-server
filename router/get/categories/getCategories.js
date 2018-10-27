@@ -1,22 +1,18 @@
 'use strict'
 
 const express = require('express')
-const mysqlClient = require('../../lib/sql/mysqlClient')
-const checkCache = require('../../lib/router/decorators/checkCache')
+
+const mysqlClient = require('../../../lib/sql/mysqlClient')
+const checkCache = require('../../../lib/router/checkCache')
+const categoriesLimitPromise = require('../../../lib/router/categoriesLimitPromise')
+
 const categories = mysqlClient.tables.categories
-const ColorLog = require('sim-color-log')
+
 /**
  * 图书分类上限数目，用于减小缓存大小
  */
 let categoriesLimit
-;(async () => {
-  categoriesLimit = (await categories.select({
-    orderBy: { id: false },
-    limit: [0, 1]
-  }))[0].id
-  ColorLog.log('分类目录上限已读取: ')
-  ColorLog.log('上限数目为: ' + categoriesLimit)
-})()
+categoriesLimitPromise.then(value => (categoriesLimit = value))
 /**
  * 图书分类 路由
  */
@@ -45,12 +41,19 @@ const getCategoriesId = async (req, res, next) => {
 
 routerCategories.get(
   '/categories/:id.json',
-  checkCache(getCategoriesId, undefined, req => {
-    let id = parseInt(req.params.id)
-    if (id > categoriesLimit) {
-      id = -1
-    }
-    return 'json-categories-' + id
-  })
+  (() => {
+    return checkCache({
+      handler: getCategoriesId,
+      getKeyFun: req => {
+        let id = parseInt(req.params.id)
+        if (id > categoriesLimit) {
+          id = -1
+        }
+        // return 'json-categories-' + id
+        return id
+      },
+      hashKey: 'categories'
+    })
+  })()
 )
 module.exports = routerCategories

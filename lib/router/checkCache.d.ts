@@ -4,7 +4,7 @@ import express = require('express')
  * 包装路由函数，以用于检查 Redis 缓存
  * @description 参考了 https://www.jianshu.com/p/9852d59280ca
  */
-declare const checkCache: (
+declare const checkCache: (p:{
   /**
    * Router 处理函数，必须使用 req.send() 来返回数据
    */
@@ -14,9 +14,14 @@ declare const checkCache: (
    */
   expiredTime?: number,
   /**
+   * Router 处理函数，必须使用 req.send() 来返回数据
+   */
+  hashKey?: string,
+  /**
    * 获取 Redis Key 的函数
    */
-  getKeyFunction?: (request: express.Request) => string
+  getKeyFun?: (request: express.Request) => string
+}
 ) => void
 
 module.exports = checkCache
