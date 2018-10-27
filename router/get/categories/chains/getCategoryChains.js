@@ -2,8 +2,8 @@
 
 const express = require('express')
 
-const mysqlClient = require('../../../lib/sql/mysqlClient')
-const redisClient = require('../../../lib/sql/redisClient')
+const mysqlClient = require('../../../../lib/sql/mysqlClient')
+const redisClient = require('../../../../lib/sql/redisClient')
 const ColorLog = require('sim-color-log')
 
 const categories = mysqlClient.tables.categories
@@ -12,19 +12,33 @@ const REDIS_KEY = 'categoryInfos'
 /**
  * 系统加载时自动加载全部分类的基本信息到 Redis 内
  */
-categories
-  .select()
-  .then(values => {
-    const allPromise = []
-    values.forEach(value => {
-      allPromise.push(
-        new Promise(resolve =>
-          redisClient.hset(REDIS_KEY, value.id, JSON.stringify(value), resolve)
-        )
+global._PromisesToDo.push(
+  categories
+    .select()
+    .then(values =>
+      Promise.all(
+        (() => {
+          const allPromise = []
+          values.forEach(value => {
+            allPromise.push(
+              new Promise(resolve =>
+                redisClient.hset(
+                  REDIS_KEY,
+                  value.id,
+                  JSON.stringify(value),
+                  resolve
+                )
+              )
+            )
+          })
+          return allPromise
+        })()
       )
-    })
-  })
-  .then(ColorLog.ok('已成功载入所有分类数据至 Redis 数据库中'))
+    )
+    .then(values =>
+      ColorLog.ok(`已成功载入 ${values.length} 条分类数据至 Redis 数据库中`)
+    )
+)
 
 /**
  * 图书分类链 路由
@@ -77,9 +91,6 @@ const getCategoryChainFun = async (req, res, next) => {
   next()
 }
 
-routerCategoryChains.get(
-  '/category-chains/:id.json',
-  getCategoryChainFun
-)
+routerCategoryChains.get('/chains/:id.json', getCategoryChainFun)
 
 module.exports = routerCategoryChains

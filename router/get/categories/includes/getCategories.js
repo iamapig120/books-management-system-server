@@ -2,9 +2,9 @@
 
 const express = require('express')
 
-const mysqlClient = require('../../../lib/sql/mysqlClient')
-const checkCache = require('../../../lib/router/checkCache')
-const categoriesLimitPromise = require('../../../lib/router/categoriesLimitPromise')
+const mysqlClient = require('../../../../lib/sql/mysqlClient')
+const checkCache = require('../../../../lib/router/checkCache')
+const categoriesLimitPromise = require('../../../../lib/router/categoriesLimitPromise')
 
 const categories = mysqlClient.tables.categories
 
@@ -40,7 +40,7 @@ const getCategoriesId = async (req, res, next) => {
 }
 
 routerCategories.get(
-  '/categories/:id.json',
+  '/includes/:id.json',
   checkCache({
     handler: getCategoriesId,
     getKeyFun: req => {
