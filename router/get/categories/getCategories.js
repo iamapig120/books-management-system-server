@@ -41,19 +41,17 @@ const getCategoriesId = async (req, res, next) => {
 
 routerCategories.get(
   '/categories/:id.json',
-  (() => {
-    return checkCache({
-      handler: getCategoriesId,
-      getKeyFun: req => {
-        let id = parseInt(req.params.id)
-        if (id > categoriesLimit) {
-          id = -1
-        }
-        // return 'json-categories-' + id
-        return id
-      },
-      hashKey: 'categories'
-    })
-  })()
+  checkCache({
+    handler: getCategoriesId,
+    getKeyFun: req => {
+      let id = parseInt(req.params.id)
+      if (id > categoriesLimit) {
+        id = -1
+      }
+      // return 'json-categories-' + id
+      return id
+    },
+    hashKey: 'categories'
+  })
 )
 module.exports = routerCategories
