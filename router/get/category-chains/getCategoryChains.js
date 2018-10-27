@@ -5,8 +5,28 @@ const express = require('express')
 const mysqlClient = require('../../../lib/sql/mysqlClient')
 const checkCache = require('../../../lib/router/checkCache')
 const categoriesLimitPromise = require('../../../lib/router/categoriesLimitPromise')
+const redisClient = require('../../../lib/sql/redisClient')
+const ColorLog = require('sim-color-log')
 
 const categories = mysqlClient.tables.categories
+const REDIS_KEY = 'categoryInfos'
+
+/**
+ * 系统加载时自动加载全部分类的基本信息到 Redis 内
+ */
+categories
+  .select()
+  .then(values => {
+    const allPromise = []
+    values.forEach(value => {
+      allPromise.push(
+        new Promise(resolve =>
+          redisClient.hset(REDIS_KEY, value.id, JSON.stringify(value), resolve)
+        )
+      )
+    })
+  })
+  .then(ColorLog.ok('已成功载入所有分类数据至 Redis 数据库中'))
 
 /**
  * 图书分类上限数目，用于减小缓存大小
@@ -35,22 +55,42 @@ const getCategoryChainFun = async (req, res, next) => {
   let queryRes
   while (
     await (async () => {
-      queryRes = await categories.select({
-        where: {
-          id: idToSearch
+      queryRes = await new Promise(resolve =>
+        redisClient.hget(REDIS_KEY, idToSearch || 0, (error, value) => {
+          if (error) {
+            throw error
+          }
+          if (value) {
+            resolve(JSON.parse(value))
+          } else {
+            resolve(null)
+          }
+        })
+      )
+      if (!queryRes) {
+        queryRes = await categories.select({
+          where: {
+            id: idToSearch
+          }
+          // orderBy: { id: true }
+          // columns: ['id', 'code', 'name', 'parent_Id']
+        })
+        if (queryRes.length > 0) {
+          queryRes = queryRes[0]
+        } else {
+          queryRes = null
         }
-        // orderBy: { id: true }
-        // columns: ['id', 'code', 'name', 'parent_Id']
-      })
-      return queryRes.length > 0
+        redisClient.hset(REDIS_KEY, idToSearch || 0, JSON.stringify(queryRes))
+      }
+      return queryRes
     })()
   ) {
     if (result) {
-      queryRes[0].categories = result
+      queryRes.categories = result
     }
-    result = queryRes[0]
-    idToSearch = queryRes[0].parent_id
-    delete queryRes[0].parent_id
+    result = queryRes
+    idToSearch = queryRes.parent_id
+    delete queryRes.parent_id
   }
   res.send(JSON.stringify(result || {}))
   next()
@@ -63,7 +103,7 @@ routerCategoryChains.get(
       handler: getCategoryChainFun,
       getKeyFun: req => {
         let id = parseInt(req.params.id)
-        if (id > categoriesLimit) {
+        if (id > categoriesLimit || !Number.isInteger(id)) {
           id = -1
         }
         // return 'json-category-chain-' + id
