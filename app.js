@@ -1,14 +1,16 @@
 'use strict'
 
-const express = require('express')
-const app = express()
-const ColorLog = require('sim-color-log')
-
 // 输出 Banner
 require('./lib/others/logBanner')()
 
+const ColorLog = require('sim-color-log')
+
 // 输出程序开始运行信息
 ColorLog.ok('服务端程序已开始加载，请稍后……', 'LibMS')
+
+// 正式开始加载程序
+const express = require('express')
+const app = express()
 
 /**
  * 一个全局变量，用于保证 express 监听端口一定在系统完全加载完毕后
@@ -18,6 +20,8 @@ global._PromisesToDo = []
 
 // 访问 Logs ，所有请求方式路由
 const morganLogs = require('./router/all/morganLogs')
+// 依赖 Redis 的 session ，所有请求方式路由
+const sessionRedis = require('./router/all/sessionRedis')
 
 // 图书分类总路由
 const getCategoriesMain = require('./router/get/categories/getCateoriesMain')
@@ -27,6 +31,9 @@ const PORT_NUMBER = 3000
 
 // 利用 Morgan 提供 Log 信息
 app.use(morganLogs)
+// 利用 Redis 设置一个 Session
+app.use(sessionRedis)
+
 // 将所有路由设置到 app 上
 app.use(getCategoriesMain)
 
