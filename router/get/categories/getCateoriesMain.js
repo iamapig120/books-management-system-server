@@ -11,6 +11,9 @@ const getCategories = require('./includes/getCategories')
 // 图书分类链 Get 路由
 const getCategoryChains = require('./chains/getCategoryChains')
 
-routerCategoriesMain.use('/categories', getCategories, getCategoryChains)
+// 检查是否已登录路由
+const checkLogined = require('../../all/checkLogined')
+
+routerCategoriesMain.use('/categories', checkLogined, getCategories, getCategoryChains)
 
 module.exports = routerCategoriesMain

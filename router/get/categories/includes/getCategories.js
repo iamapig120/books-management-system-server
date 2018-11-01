@@ -28,14 +28,17 @@ const getCategoriesId = async (req, res, next) => {
   if (parentId === '0') {
     parentId = null
   }
-  const result = categories.select({
+  const result = await categories.select({
     where: {
       parent_Id: parentId
     },
     orderBy: { id: true },
     columns: ['id', 'code', 'name']
   })
-  res.send(JSON.stringify(await result))
+  res.send({
+    status: 0,
+    info: result
+  })
   next()
 }
 

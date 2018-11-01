@@ -87,7 +87,12 @@ const getCategoryChainFun = async (req, res, next) => {
     idToSearch = queryRes.parent_id
     delete queryRes.parent_id
   }
-  res.send(JSON.stringify(result || {}))
+  if (result) {
+    result.status = 0
+  } else {
+    result = { status: 0 }
+  }
+  res.send(result)
   next()
 }
 

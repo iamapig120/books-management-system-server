@@ -6,7 +6,7 @@ require('./lib/others/logBanner')()
 const ColorLog = require('sim-color-log')
 
 // 输出程序开始运行信息
-ColorLog.ok('服务端程序已开始加载，请稍后……', 'LibMS')
+ColorLog.ok('服务端程序已开始加载', 'LibMS')
 
 // 正式开始加载程序
 const express = require('express')
@@ -25,9 +25,14 @@ const sessionRedis = require('./router/all/sessionRedis')
 
 // 图书分类总路由
 const getCategoriesMain = require('./router/get/categories/getCateoriesMain')
+// 用户操作总路由
+const postUsersMain = require('./router/post/users/postUsersMain')
 
 // 端口号
 const PORT_NUMBER = 3000
+
+// 提供静态文件目录
+app.use(express.static('static'))
 
 // 利用 Morgan 提供 Log 信息
 app.use(morganLogs)
@@ -35,7 +40,10 @@ app.use(morganLogs)
 app.use(sessionRedis)
 
 // 将所有路由设置到 app 上
+// 图书分类相关 Get 请求路由
 app.use(getCategoriesMain)
+// 用户操作相关 Post 请求路由
+app.use(postUsersMain)
 
 // 当全部需要加载的项目均已加载完成，开始监听端口
 Promise.all(global._PromisesToDo).then(values =>
