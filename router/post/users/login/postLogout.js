@@ -14,13 +14,11 @@ const routerPostLogout = express.Router()
  * @param {express.NextFunction} next NextFunction对象
  */
 const routerFunction = async (req, res, next) => {
-  if (!req.body) return res.sendStatus(400)
   if (!req.session.uid) {
     res.send({
       status: 2,
       info: "Havn't Login."
     })
-    next()
   } else {
     req.session.uid = undefined
     delete req.session.uid
@@ -29,6 +27,7 @@ const routerFunction = async (req, res, next) => {
       info: 'Logout Succ.'
     })
   }
+  next()
 }
 
 routerPostLogout.post('/logout', routerFunction)

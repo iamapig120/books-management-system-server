@@ -9,14 +9,60 @@
 </head>
 
 <body>
-  <form action="/users/login" method="post">
+  <form action="/users/login" method="post" id="form1">
     <label for="account">账户</label><input type="text" name="account" id="account">
     <label for="password">密码 </label><input type="password" name="password" id="password">
-    <button type="submit">登入</button>
+    <button type="submit" id="btn1">登入</button>
   </form>
   <form action="/users/logout" method="post">
-    <button type="submit">登出</button>
+    <button type="submit" id="btn2">登出</button>
   </form>
+  <script>
+    function sha256(str) {
+      // We transform the string into an arraybuffer.
+      var buffer = new TextEncoder("utf-8").encode(str);
+      return crypto.subtle.digest("SHA-256", buffer).then(function (hash) {
+        return hex(hash);
+      });
+    }
+    function hex(buffer) {
+      var hexCodes = [];
+      var view = new DataView(buffer);
+      for (var i = 0; i < view.byteLength; i += 4) {
+        // Using getUint32 reduces the number of iterations needed (we process 4 bytes each time)
+        var value = view.getUint32(i)
+        // toString(16) will give the hex representation of the number without padding
+        var stringValue = value.toString(16)
+        // We use concatenation and slice for padding
+        var padding = '00000000'
+        var paddedValue = (padding + stringValue).slice(-padding.length)
+        hexCodes.push(paddedValue);
+      }
+
+      // Join all the hex strings into one
+      return hexCodes.join("");
+    }
+
+    document.getElementById('btn1').addEventListener('click', async e => {
+      e.preventDefault()
+      document.getElementById('password').value = await sha256(document.getElementById('password').value)
+      const formData = new FormData(document.getElementById('form1'))
+      // formData.append("account", document.getElementById('account').value)
+      // formData.append("password", document.getElementById('password').value)
+      const request = new XMLHttpRequest()
+      request.addEventListener('readystatechange', (e) => {
+        if (request.readyState === XMLHttpRequest.DONE) {
+          if (request.status === 200) {
+            console.log(request.responseText)
+          }
+        }
+      })
+      request.open("POST", '/users/login')
+      request.send(formData);
+      window.request = request
+    })
+
+  </script>
 </body>
 
 </html>

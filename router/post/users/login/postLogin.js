@@ -1,12 +1,13 @@
 'use strict'
 
 const express = require('express')
-// const multer = require('multer')
-const bodyParser = require('body-parser')
+const multer = require('multer')
+const crypto = require('crypto')
+// const bodyParser = require('body-parser')
 const mysqlClient = require('../../../../lib/sql/mysqlClient')
 
-// const postRouter = multer()
-const postRouter = bodyParser.urlencoded({ extended: false })
+const postRouter = multer().none()
+// const postRouter = bodyParser.urlencoded({ extended: false })
 
 /**
  * 登入 Post 请求路由
@@ -31,12 +32,20 @@ const routerFunction = async (req, res, next) => {
   }
   const account = (req.body.account || '').toString()
   const password = (req.body.password || '').toString()
-  if (account.length > 0 && password.length > 0) {
+  if (
+    account.length > 0 &&
+    password.length > 0 &&
+    account.length < 128 &&
+    password.length < 192
+  ) {
     mysqlClient.tables.users
       .select({
         where: {
           account,
-          password
+          password: crypto
+            .createHmac('sha256', '9981797954')
+            .update(password)
+            .digest('hex')
         }
       })
       .then(value => {
@@ -56,7 +65,7 @@ const routerFunction = async (req, res, next) => {
       })
   } else {
     res.send({
-      status: 1,
+      status: 2,
       info: 'Wrong Acc or Pass.'
     })
     next()
@@ -64,7 +73,5 @@ const routerFunction = async (req, res, next) => {
 }
 
 routerPostLogin.post('/login', postRouter, routerFunction)
-
-// crypto.createHash('SHA-256').update('9981797954')
 
 module.exports = routerPostLogin
