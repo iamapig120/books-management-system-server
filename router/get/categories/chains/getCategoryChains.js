@@ -13,31 +13,59 @@ const REDIS_KEY = 'categoryInfos'
  * 系统加载时自动加载全部分类的基本信息到 Redis 内
  */
 global._PromisesToDo.push(
-  categories
-    .select()
-    .then(values =>
-      Promise.all(
-        (() => {
-          const allPromise = []
-          values.forEach(value => {
-            allPromise.push(
-              new Promise(resolve =>
-                redisClient.hset(
-                  REDIS_KEY,
-                  value.id,
-                  JSON.stringify(value),
-                  resolve
-                )
+  (() => {
+    let timer
+    let i = 0
+    return categories
+      .select()
+      .then(values => {
+        ColorLog.warn(
+          `正在尝试载入 ${values.length} 条分类数据至 Redis 数据库中`
+        )
+        const length = values.length
+        timer = setImmediate(() => {
+          process.stdout.clearLine()
+          process.stdout.cursorTo(0)
+          process.stdout.write(`[ ${i} / ${length} ]`)
+        }, 50)
+        return Promise.all(
+          (() => {
+            const allPromise = []
+            values.forEach(value => {
+              allPromise.push(
+                new Promise(resolve => {
+                  redisClient.hset(
+                    REDIS_KEY,
+                    value.id,
+                    JSON.stringify(value),
+                    err => {
+                      if (err) {
+                        ColorLog.err(`载入键值${value.id}失败`)
+                      } else {
+                        i++
+                      }
+                      resolve()
+                    }
+                  )
+                })
               )
-            )
-          })
-          return allPromise
-        })()
+            })
+            return allPromise
+          })()
+        )
+      })
+      .then(values => {
+        process.stdout.clearLine()
+        process.stdout.cursorTo(0)
+        clearImmediate(timer)
+        return values
+      })
+      .then(values =>
+        ColorLog.ok(
+          `已成功载入 ${i} 条分类数据，失败 ${values.length - i} 条。`
+        )
       )
-    )
-    .then(values =>
-      ColorLog.ok(`已成功载入 ${values.length} 条分类数据至 Redis 数据库中`)
-    )
+  })()
 )
 
 /**

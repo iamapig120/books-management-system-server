@@ -6,7 +6,7 @@ require('./lib/others/logBanner')()
 const ColorLog = require('sim-color-log')
 
 // 输出程序开始运行信息
-ColorLog.ok('服务端程序已开始加载', 'LibMS')
+ColorLog.log('服务端程序已开始加载', 'LibMS')
 
 // 正式开始加载程序
 const express = require('express')
@@ -48,8 +48,8 @@ app.use(postUsersMain)
 // 当全部需要加载的项目均已加载完成，开始监听端口
 Promise.all(global._PromisesToDo).then(values =>
   app.listen(PORT_NUMBER, () => {
-    ColorLog.warn(`Express 服务器已工作，端口号: ${PORT_NUMBER}`)
-    ColorLog.ok('服务端程序加载完毕', 'LibMS')
+    ColorLog.warn(`Express 服务器已工作，端口号: ${PORT_NUMBER}`, 'LibMS')
+    ColorLog.log('服务端程序加载完毕', 'LibMS')
     // 历史使命已经结束，该全局变量已经可以删除了
     delete global._PromisesToDo
   })

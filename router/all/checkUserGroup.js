@@ -9,9 +9,9 @@ const mysqlClient = require('../../lib/sql/mysqlClient')
  */
 const checkUserGroupRouter = express.Router()
 
-const checkLoginedFunction = groupID => {
-  if (groupID.toString) {
-    groupID = groupID.toString()
+const checkLoginedFunction = (...groupIDs) => {
+  if (groupIDs.length > 0) {
+    groupIDs = groupIDs.map(value => value.toString())
   }
   /**
    * 实际返回的路由函数
@@ -22,28 +22,46 @@ const checkLoginedFunction = groupID => {
   return async (req, res, next) => {
     let mysqlResult
     if (req.session.uid) {
-      if (groupID === (await redisClient.hget('user-group', req.session.uid))) {
+      if (
+        groupIDs.indexOf(
+          await redisClient.hget('user-group', req.session.uid)
+        ) > -1
+      ) {
         next()
       } else if (
-        (async () => {
-          mysqlResult = await mysqlClient.tables.users.select({
-            where: {
-              id: req.session.uid
+        groupIDs.indexOf(
+          await (async () => {
+            mysqlResult = await mysqlClient.tables.users.select({
+              where: {
+                id: req.session.uid
+              }
+            })
+            if (mysqlResult.length > 0) {
+              const groupValueString = mysqlResult[0].group.toString()
+              redisClient.hset(
+                'user-group',
+                mysqlResult[0].id,
+                groupValueString
+              )
+              return groupValueString
+            } else {
+              return null
             }
-          })
-          return mysqlResult[0]
-        })()
+          })()
+        ) > -1
       ) {
+        next()
+      } else {
         res.send({
           status: 2,
           info: 'No Authority'
         })
-      } else {
-        res.send({
-          status: 1,
-          info: "Havn't Logined"
-        })
       }
+    } else {
+      res.send({
+        status: 1,
+        info: "Havn't Logined"
+      })
     }
   }
 }
