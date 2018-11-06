@@ -5,6 +5,7 @@ const multer = require('multer')
 const crypto = require('crypto')
 // const bodyParser = require('body-parser')
 const mysqlClient = require('../../../../lib/sql/mysqlClient')
+const redisClient = require('../../../../lib/sql/redisClient')
 
 const postRouter = multer().none()
 // const postRouter = bodyParser.urlencoded({ extended: false })
@@ -51,6 +52,7 @@ const routerFunction = async (req, res, next) => {
       .then(value => {
         if (value.length > 0) {
           req.session.uid = value[0].id
+          redisClient.hset('users-group', value[0].id, value[0].group)
           res.send({
             status: 0,
             info: 'Login Succ.'

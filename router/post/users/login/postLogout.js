@@ -1,6 +1,7 @@
 'use strict'
 
 const express = require('express')
+const redisClient = require('../../../../lib/sql/redisClient')
 
 /**
  * 登出 Post 请求路由
@@ -20,6 +21,7 @@ const routerFunction = async (req, res, next) => {
       info: "Havn't Login."
     })
   } else {
+    redisClient.hdel('users-group', req.session.uid)
     req.session.uid = undefined
     delete req.session.uid
     res.send({

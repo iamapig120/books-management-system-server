@@ -1,6 +1,6 @@
 const session = require('express-session')
 const RedisStore = require('connect-redis')(session)
-const redisClient = require('../..//lib/sql/redisClient')
+const redisClient = require('../../lib/sql/redisClient')
 
 module.exports = session({
   store: new RedisStore({
