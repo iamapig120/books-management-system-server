@@ -17,9 +17,10 @@ const checkLoginedFunction = (req, res, next) => {
   if (req.session.uid) {
     next()
   } else {
+    res.statusCode = 401
     res.send({
       status: 1,
-      info: 'Havn\'t Logined'
+      info: "Havn't Logined"
     })
   }
 }

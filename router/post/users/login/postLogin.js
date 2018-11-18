@@ -24,6 +24,7 @@ const routerPostLogin = express.Router()
 const routerFunction = async (req, res, next) => {
   if (!req.body) return res.sendStatus(400)
   if (req.session.uid) {
+    res.statusCode = 401
     res.send({
       status: 2,
       info: "Havn't Logout."
@@ -58,6 +59,7 @@ const routerFunction = async (req, res, next) => {
             info: 'Login Succ.'
           })
         } else {
+          res.statusCode = 401
           res.send({
             status: 1,
             info: 'Wrong Acc or Pass.'
@@ -66,6 +68,7 @@ const routerFunction = async (req, res, next) => {
         next()
       })
   } else {
+    res.statusCode = 401
     res.send({
       status: 2,
       info: 'Wrong Acc or Pass.'

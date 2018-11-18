@@ -7,7 +7,7 @@ const express = require('express')
 const routerBooksMain = express.Router()
 
 // 新增书籍 Post 路由
-const postCreate = require('./login/postCreate')
+const postCreate = require('./create/postCreate')
 // 检查满足用户组 路由
 const checkUserGroup = require('../../all/checkUserGroup')
 

@@ -4,6 +4,8 @@ const express = require('express')
 const multer = require('multer')
 const mysqlClient = require('../../../../lib/sql/mysqlClient')
 
+const postRouter = multer().none()
+
 /**
  * 登出 Post 请求路由
  */
@@ -70,7 +72,7 @@ const routerFunction = async (req, res, next) => {
   next()
 }
 
-routerPostCreate.post('/create', multer, routerFunction)
+routerPostCreate.post('/create', postRouter, routerFunction)
 
 // crypto.createHash('SHA-256').update('9981797954')
 

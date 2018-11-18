@@ -23,6 +23,8 @@ const morganLogs = require('./router/all/morganLogs')
 // 依赖 Redis 的 session ，所有请求方式路由
 const sessionRedis = require('./router/all/sessionRedis')
 
+// 图书操作总路由
+const postBooksMain = require('./router/post/books/postBooksMain')
 // 图书分类总路由
 const getCategoriesMain = require('./router/get/categories/getCateoriesMain')
 // 用户操作总路由
@@ -40,6 +42,8 @@ app.use(morganLogs)
 app.use(sessionRedis)
 
 // 将所有路由设置到 app 上
+// 图书操作相关 Post 请求路由
+app.use(postBooksMain)
 // 图书分类相关 Get 请求路由
 app.use(getCategoriesMain)
 // 用户操作相关 Post 请求路由
