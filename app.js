@@ -12,6 +12,9 @@ ColorLog.log('服务端程序已开始加载', 'LibMS')
 const express = require('express')
 const app = express()
 
+// 配置
+const settings = require('./settings.js')
+
 /**
  * 一个全局变量，用于保证 express 监听端口一定在系统完全加载完毕后
  * @type {Promise<any[]>}
@@ -31,7 +34,7 @@ const getCategoriesMain = require('./router/get/categories/getCateoriesMain')
 const postUsersMain = require('./router/post/users/postUsersMain')
 
 // 端口号
-const PORT_NUMBER = 3000
+const PORT_NUMBER = settings.PORT_NUMBER
 
 // 提供静态文件目录
 app.use(express.static('static'))
